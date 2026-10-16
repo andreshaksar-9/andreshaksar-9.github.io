@@ -18,22 +18,39 @@ let secret = "";
 let attempts = 4;
 let terminalData = [];
 let isGameOver = false;
+let highestLikeness = -1;
 
 const wordListEl = document.getElementById("word-list");
 const consoleOutputEl = document.getElementById("console-output");
 const attemptsDisplayEl = document.getElementById("attempts-display");
+const bestGuessEl = document.getElementById("best-guess");
 const bodyEl = document.getElementById("body");
+const binaryBgEl = document.getElementById("binary-bg");
+
+function generateBinaryBackground() {
+    let binaryStr = "";
+    // Generates enough binary to fill the scrolling background
+    for (let i = 0; i < 6000; i++) {
+        binaryStr += Math.round(Math.random()) + " ";
+    }
+    binaryBgEl.innerText = binaryStr;
+}
 
 function initGame() {
     isGameOver = false;
     attempts = 4;
-    consoleOutputEl.innerHTML = "";
-    bodyEl.classList.remove("locked"); // Reset red theme
-    logToConsole("GNK-CYBER SEC INTERFACE INITIALIZED");
+    highestLikeness = -1;
     
-    // Increased quantities for the new grid layout
-    let numDuds = Math.floor(Math.random() * 3) + 4; 
-    let numWords = 14; 
+    consoleOutputEl.innerHTML = "";
+    bestGuessEl.innerHTML = "HIGHEST LIKENESS: NONE";
+    bodyEl.classList.remove("locked"); 
+    
+    logToConsole("GNK-CYBER SEC INTERFACE INITIALIZED");
+    generateBinaryBackground();
+    
+    // Doubled quantities for the longer box array
+    let numDuds = Math.floor(Math.random() * 4) + 8; // 8 to 11 duds
+    let numWords = 28; // 28 passwords
     
     let activeWords = [...WORD_BANK].sort(() => 0.5 - Math.random()).slice(0, numWords);
     let activeDuds = [...DUD_BANK].sort(() => 0.5 - Math.random()).slice(0, numDuds);
@@ -41,11 +58,10 @@ function initGame() {
     let combined = [...activeWords, ...activeDuds].sort(() => 0.5 - Math.random());
     secret = activeWords[Math.floor(Math.random() * activeWords.length)];
     
-    // Lock the hex codes to the items so they don't scramble on re-render
     terminalData = combined.map(item => ({
         text: item,
         hex: "0x" + Math.floor(Math.random() * (9999 - 1000 + 1) + 1000).toString(16).toUpperCase(),
-        status: "active" // Can be "active", "incorrect", or "removed"
+        status: "active" 
     }));
     
     renderTerminal();
@@ -70,7 +86,6 @@ function renderTerminal() {
                 div.classList.add("incorrect");
             }
             
-            // Only allow clicking if the game is active and the word hasn't been guessed
             if (!isGameOver && item.status !== "incorrect") {
                 div.onclick = () => handleGuess(index);
             } else if (item.status === "incorrect") {
@@ -90,12 +105,10 @@ function handleGuess(index) {
 
     logToConsole(`> ${guess}`);
 
-    // Dud Mechanic
     if (guess.startsWith("[")) {
         item.status = "removed";
         logToConsole(`> ${guess} DISCARDED FROM BUFFER`);
         
-        // Find one active wrong word and remove it
         for (let i = 0; i < terminalData.length; i++) {
             let w = terminalData[i];
             if (w.status === "active" && w.text !== secret && WORD_BANK.includes(w.text)) {
@@ -108,7 +121,6 @@ function handleGuess(index) {
         return;
     }
 
-    // Win State
     if (guess === secret) {
         logToConsole("> ACCESS GRANTED. SYSTEM UNLOCKED.");
         wordListEl.innerHTML = "<h2 style='color: #1fff0f; grid-column: span 2;'>SYSTEM UNLOCKED</h2><div class='word' style='margin-top: 20px; grid-column: span 2;' onclick='initGame()'>[REBOOT TERMINAL]</div>";
@@ -116,23 +128,28 @@ function handleGuess(index) {
         return;
     }
 
-    // Incorrect Guess
     attempts--;
-    item.status = "incorrect"; // Flags for red styling instead of dots
+    item.status = "incorrect"; 
     
     let secretSet = new Set(secret.split(''));
     let guessSet = new Set(guess.split(''));
     let matched = [...secretSet].filter(char => guessSet.has(char));
+    let likenessScore = matched.length;
     
-    logToConsole(`> ENTRY DENIED. LIKENESS=${matched.length}`);
+    logToConsole(`> ENTRY DENIED. LIKENESS=${likenessScore}`);
+    
+    // Highest Likeness Tracker Logic
+    if (likenessScore > highestLikeness) {
+        highestLikeness = likenessScore;
+        bestGuessEl.innerHTML = `HIGHEST LIKENESS:<br>> ${guess} (${likenessScore}/${secret.length})`;
+    }
     
     updateAttemptsDisplay();
     renderTerminal();
 
-    // Loss State
     if (attempts <= 0) {
         logToConsole(`> LOCKOUT INITIATED. PASSWORD WAS: ${secret}`);
-        bodyEl.classList.add("locked"); // Triggers global red CSS
+        bodyEl.classList.add("locked"); 
         wordListEl.innerHTML = `<h2 style='color: red; grid-column: span 2;'>SYSTEM LOCKED</h2><p style='grid-column: span 2;'>PASSWORD WAS: ${secret}</p><div class='word' style='margin-top: 20px; grid-column: span 2;' onclick='initGame()'>[REBOOT TERMINAL]</div>`;
         isGameOver = true;
     }
@@ -149,7 +166,7 @@ function logToConsole(message) {
     consoleOutputEl.appendChild(p);
     
     if (consoleOutputEl.children.length > 9) {
-        consoleOutputEl.removeChild(consoleOutputEl.children[1]); // Keep the ">" arrow at top
+        consoleOutputEl.removeChild(consoleOutputEl.children[1]); 
     }
 }
 
