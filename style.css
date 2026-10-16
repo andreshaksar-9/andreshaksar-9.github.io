@@ -5,15 +5,17 @@ body {
     margin: 0;
     padding: 20px;
     text-transform: uppercase;
+    transition: all 0.3s ease; /* Smooth transition for the red lose screen */
 }
 
 #terminal {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     border: 2px solid #1fff0f;
     padding: 20px;
     box-shadow: 0 0 10px #1fff0f, inset 0 0 10px #1fff0f;
     min-height: 80vh;
+    transition: all 0.3s ease;
 }
 
 #header p {
@@ -26,16 +28,19 @@ body {
     gap: 40px;
 }
 
+/* Creates the box array (2-column grid layout) */
 #word-list {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+    flex: 2;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px 20px;
+    align-content: start;
 }
 
 .word {
     cursor: pointer;
-    margin: 5px 0;
     width: max-content;
+    padding: 2px 5px;
 }
 
 .word:hover {
@@ -43,15 +48,45 @@ body {
     color: #000;
 }
 
+/* Incorrect guess styling */
+.incorrect {
+    color: red !important;
+}
+
+.incorrect:hover {
+    background-color: red !important;
+    color: #000 !important;
+}
+
 #console-output {
     flex: 1;
-    border-left: 1px solid #1fff0f;
+    border-left: 2px solid #1fff0f;
     padding-left: 20px;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+    transition: all 0.3s ease;
 }
 
 #console-output p {
     margin: 2px 0;
+}
+
+/* Global Loss State - Turns the terminal red */
+body.locked {
+    color: red;
+}
+
+body.locked #terminal {
+    border-color: red;
+    box-shadow: 0 0 15px red, inset 0 0 15px red;
+}
+
+body.locked #console-output {
+    border-left-color: red;
+}
+
+body.locked .word:hover {
+    background-color: red;
+    color: #000;
 }
